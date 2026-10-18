@@ -1,0 +1,12 @@
+*
+!Dockerfile
+!package.json
+!config/
+!config/model.json
+!config/sources.json
+!src/
+!src/**
+!web/
+!web/**
+!demo/
+!demo/**

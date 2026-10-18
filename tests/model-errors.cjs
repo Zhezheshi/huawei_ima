@@ -10,3 +10,17 @@ test('四项关键信息齐全时忽略模型对可选卖点的多余追问（�
  let calls=0;const m=modelWith(async()=>({ok:true,status:200,json:async()=>({choices:[{message:{content:JSON.stringify(calls++===0?{product,audience:'商务人士',scene:'差旅',platform:'门店朋友圈',questions:['请确认核心卖点']}:generated)}}],usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2}})}),ima);
  const result=await m.generate({task:'为MateBook 14鸿蒙版写商务差旅朋友圈'});assert.equal(result.status,'complete');assert.equal(calls,2);
 });
+
+function currentModelWith(fetch){
+ const box={module:{exports:{}},require,process:{env:{DEEPSEEK_API_KEY:'nonsecret-test-placeholder'}},AbortSignal,fetch};
+ box.require=name=>name==='../config/model.json'?require('../config/model.json'):require(name);
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../src/model.cjs'),'utf8'),box);return box.module.exports;
+}
+test('当前模型客户端非法JSON只重试一次且保留API用量',async()=>{
+ let calls=0;const m=currentModelWith(async()=>({ok:true,status:200,json:async()=>({choices:[{message:{content:++calls===1?'{broken':'{"ok":true}'}}],usage:{total_tokens:7}})}));
+ const r=await m.call('write','test',{});assert.equal(r.ok,true);assert.equal(calls,2);assert.equal(m.usage[0].status,'invalid_json');assert.equal(m.usage.reduce((n,c)=>n+c.usage.total_tokens,0),14);
+});
+test('当前模型客户端连续非法JSON明确停止，不交付替代稿',async()=>{
+ const m=currentModelWith(async()=>({ok:true,status:200,json:async()=>({choices:[{message:{content:'not json'}}]})}));
+ await assert.rejects(m.call('write','test',{}),/连续返回非法JSON/);assert.equal(m.usage.length,2);
+});

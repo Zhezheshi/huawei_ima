@@ -75,12 +75,12 @@ function sourceConditions(d,p){
  d.title=fix(d.title);d.intro=fix(d.intro);d.cta=fix(d.cta);for(const x of d.sections){x.heading=fix(x.heading);x.text=fix(x.text);}d.strategy.priorities=d.strategy.priorities.map(fix);return d;
 }
 function checks(d,p,task){
- const issues=[];const all=[d.title,d.intro,...d.sections.map(x=>x.heading+'\n'+x.text),d.cta,...d.imagePlan.map(x=>x.caption+' '+x.position),...d.tags].join('\n');
+ const issues=[];const all=[d.title,d.intro,...d.sections.map(x=>x.heading+'\n'+x.text),d.cta,...d.imagePlan.map(x=>x.caption),...d.tags].join('\n');
  if(/(?:我|本人).{0,12}(?:使用|用了|用过|体验了).{0,12}(?:月|年|周|天)|最好|最强|全球第一|行业第一|百分之百|100%保证|零风险|绝不卡|永不|保证兼容|完全兼容|兼容所有|亲测|亲身体验/.test(all))issues.push('存在绝对化、虚假体验或兼容承诺');
  if(/(?:\d[\d,.]*\s*(?:元|块钱)|[¥￥]\s*\d|立减|补贴\s*\d|到手价|券后价|免费赠送)/.test(all))issues.push('含未经本版核验的价格或优惠承诺');
  const inventoryAssertions=all.replace(/(?:不|未|无|不能|不得)[^。！？；\n]{0,45}(?:库存|直降|促销|优惠)[^。！？；\n]{0,25}/g,clause=>/\d|充足|紧张|仅剩|现货|售罄|赠送/.test(clause)?clause:'');
  if(/直降|库存|仅剩|限量.{0,8}\d|最后.{0,8}台|售罄/.test(inventoryAssertions))issues.push('含未经核验的优惠或库存承诺');
- if(task.platform==='门店朋友圈'){const body=[d.intro,...d.sections.map(x=>x.text),d.cta].join('');if(body.length>220||d.sections.length>1||d.strategy.priorities.length>1)issues.push('朋友圈必须压缩为220字以内、单段正文与一个核心卖点');}
+ if(task.platform==='门店朋友圈'){const body=[d.title,d.intro,...d.sections.flatMap(x=>[x.heading,x.text]),d.cta,...d.tags].join('');if([...body].length>220||d.sections.length>1||d.sections.some(x=>x.heading||/[\r\n]/.test(x.text))||d.strategy.priorities.length>1)issues.push('朋友圈必须压缩为220字以内、单段正文与一个核心卖点');}
  const ids=new Set(p.evidence.map(x=>x.id));const selected=d.imagePlan.map(x=>x.id);const images=new Set(p.images.map(x=>x.id));
  if(new Set(selected).size!==selected.length||selected.some(x=>!images.has(x)))issues.push('图片引用重复或不存在');
  for(const img of p.images){if(selected.includes(img.id)&&img.model&&!policy.sameModel(img.model,task.product))issues.push('图片型号与目标产品不一致');}

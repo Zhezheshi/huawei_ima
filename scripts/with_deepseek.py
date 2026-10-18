@@ -21,6 +21,8 @@ def main():
     env['DEEPSEEK_API_KEY'] = key
     try:
         result = subprocess.run(args, env=env)
+    except KeyboardInterrupt:
+        raise SystemExit(130) from None
     except FileNotFoundError:
         raise SystemExit('找不到要运行的命令。') from None
     finally:

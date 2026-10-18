@@ -1,7 +1,7 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
 const {checks,validate}=require('../src/agent.cjs');
 const p={raw:'14.2 英寸',evidence:[{id:'F1',quote:'14.2 英寸'}],images:[{id:'I1'}]};const t={product:'HUAWEI MateBook 14（鸿蒙版）',platform:'门店朋友圈'};
-const draft=()=>({title:'带文档到店试一试',intro:'准备换电脑？',sections:[{heading:'屏幕',text:'14.2英寸屏幕[F1]',imageIds:[]}],cta:'欢迎咨询具体版本',tags:[],strategy:{angle:'到店体验',priorities:[]},claims:[{text:'14.2英寸屏幕',evidenceIds:['F1']}],imagePlan:[{id:'I1',position:'封面',caption:'官方产品图'}],warnings:[]});
+const draft=()=>({title:'带文档到店试一试',intro:'准备换电脑？',sections:[{heading:'',text:'14.2英寸屏幕[F1]',imageIds:[]}],cta:'欢迎咨询具体版本',tags:[],strategy:{angle:'到店体验',priorities:[]},claims:[{text:'14.2英寸屏幕',evidenceIds:['F1']}],imagePlan:[{id:'I1',position:'封面',caption:'官方产品图'}],warnings:[]});
 test('有效证据和图片引用通过基本规则',()=>{assert.equal(validate(draft()),true);assert.deepEqual(checks(draft(),p,t),[]);});
 test('无依据优惠和虚假体验被拦截',()=>{const d=draft();d.cta='亲测最好！到手价1999元，立减500元';assert.ok(checks(d,p,t).some(x=>x.includes('价格')));assert.ok(checks(d,p,t).some(x=>x.includes('绝对化')));});
 test('不存在的图片和事实引用被识别',()=>{const d=draft();d.imagePlan[0].id='I99';d.claims[0].evidenceIds=['F99'];assert.ok(checks(d,p,t).some(x=>x.includes('图片')));assert.ok(checks(d,p,t).some(x=>x.includes('引用')));});
