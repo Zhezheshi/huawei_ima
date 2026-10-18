@@ -1,0 +1,33 @@
+# Local credentials must never be committed.
+.env
+.env.*
+!.env.example
+/config/ima/
+/secrets/
+*.key
+.DS_Store
+__pycache__/
+# Retrieved shared-library material and generated outputs stay local.
+/output/
+/参考资料/
+/.local/
+
+# Dependencies, caches, credentials and large local artifacts
+node_modules/
+.npm/
+.cache/
+.pytest_cache/
+*.pyc
+*.log
+*.pem
+*.p12
+*.pfx
+*.keystore
+credentials.json
+service-account*.json
+coverage/
+dist/
+*.zip
+*.tar.gz
+*.mp4
+*.mov

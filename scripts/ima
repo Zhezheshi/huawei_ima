@@ -1,0 +1,14 @@
+#!/bin/zsh
+# Credentials are read by the official script from ~/.config/ima/.
+set -eu
+unset IMA_BASE_URL
+skill_file="$HOME/.codex/skills/ima-skill/ima_api.cjs"
+node_bin="$(command -v node || true)"
+if [[ -z "$node_bin" ]]; then
+  node_bin="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+fi
+if [[ ! -x "$node_bin" || ! -f "$skill_file" ]]; then
+  print -u2 '缺少 Node.js 或 ima 技能，请检查安装。'
+  exit 1
+fi
+exec "$node_bin" "$skill_file" "$@"

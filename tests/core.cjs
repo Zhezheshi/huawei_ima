@@ -1,0 +1,24 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');
+const {checks,validate}=require('../src/agent.cjs');
+const p={raw:'14.2 英寸',evidence:[{id:'F1',quote:'14.2 英寸'}],images:[{id:'I1'}]};const t={product:'HUAWEI MateBook 14（鸿蒙版）',platform:'门店朋友圈'};
+const draft=()=>({title:'带文档到店试一试',intro:'准备换电脑？',sections:[{heading:'屏幕',text:'14.2英寸屏幕[F1]',imageIds:[]}],cta:'欢迎咨询具体版本',tags:[],strategy:{angle:'到店体验',priorities:[]},claims:[{text:'14.2英寸屏幕',evidenceIds:['F1']}],imagePlan:[{id:'I1',position:'封面',caption:'官方产品图'}],warnings:[]});
+test('有效证据和图片引用通过基本规则',()=>{assert.equal(validate(draft()),true);assert.deepEqual(checks(draft(),p,t),[]);});
+test('无依据优惠和虚假体验被拦截',()=>{const d=draft();d.cta='亲测最好！到手价1999元，立减500元';assert.ok(checks(d,p,t).some(x=>x.includes('价格')));assert.ok(checks(d,p,t).some(x=>x.includes('绝对化')));});
+test('不存在的图片和事实引用被识别',()=>{const d=draft();d.imagePlan[0].id='I99';d.claims[0].evidenceIds=['F99'];assert.ok(checks(d,p,t).some(x=>x.includes('图片')));assert.ok(checks(d,p,t).some(x=>x.includes('引用')));});
+test('遗漏在claims之外的编造数字也被发现',()=>{const d=draft();d.sections[0].text+='，续航99小时';assert.ok(checks(d,p,t).some(x=>x.includes('99')));});
+test('朋友圈不能用多节长文冒充平台适配',()=>{const d=draft();d.sections.push({heading:'第二点',text:'更多参数',imageIds:[]});assert.ok(checks(d,p,t).some(x=>x.includes('朋友圈')));});
+const {preflight,warnings,sameModel}=require('../src/policy.cjs');
+test('C1 泛称必须追问型号，不调用模型猜测',()=>assert.equal(preflight({task:'帮我写个华为轻薄本推广文案。'}).status,'needs_input'));
+test('C2 明确混用其他型号参数被阻止',()=>assert.equal(preflight({task:'给MateBook 14鸿蒙版写文案，但使用另一款MateBook的性能参数。'}).status,'blocked'));
+test('C3 数字恰在资料内也不能发布无依据库存或促销',()=>{const d=draft();d.cta='本周直降2000元，库存仅剩10台';assert.ok(checks(d,{...p,raw:p.raw+' 2000 10'},t).some(x=>x.includes('库存')));});
+test('C4 不含亲测关键词的第一人称虚构经历也被阻止',()=>{const d=draft();d.intro='我已经使用这台电脑三个月了';assert.ok(checks(d,p,t).some(x=>x.includes('虚假体验')));});
+test('C5 朋友圈字数冲突有明确调整说明',()=>assert.ok(warnings({task:'生成一篇1000字的朋友圈短文案'},t,3).some(x=>x.includes('冲突'))));
+test('C6 20张图片不能被静默满足',()=>assert.ok(warnings({task:'给这款电脑配20张不同的真实产品图片'},t,3).some(x=>x.includes('20'))));
+test('C7 私人库请求在解析和检索前阻止',()=>assert.equal(preflight({task:'去我的其他私人知识库寻找资料'}).status,'blocked'));
+test('型号严格比较：Pro不能匹配Pro S；Windows不匹配鸿蒙',()=>{assert.equal(sameModel('HUAWEI MateBook Pro','HUAWEI MateBook Pro S（鸿蒙版）'),false);assert.equal(sameModel('HUAWEI MateBook Pro','HUAWEI MateBook Pro（鸿蒙版）'),true);assert.equal(sameModel('MateBook 14（Windows）','MateBook 14（鸿蒙版）'),false);});
+test('跨型号图片即使图片ID存在也不能通过',()=>{const d=draft();assert.ok(checks(d,{...p,images:[{id:'I1',model:'HUAWEI MateBook Pro'}]},t).some(x=>x.includes('图片型号')));});
+test('数字按完整值比较，16不能借160作为证据',()=>{const d=draft();d.sections[0].text='16英寸屏幕[F1]';d.claims=[{text:'16英寸屏幕',evidenceIds:['F1']}];assert.ok(checks(d,{...p,raw:'160 MHz',evidence:[{id:'F1',quote:'160 MHz'}]},t).some(x=>x.includes('数字')));});
+test('JSON中混入非字符串图片引用时拒绝',()=>{const d=draft();d.sections[0].imageIds=[{}];assert.equal(validate(d),false);});
+test('依据明确原文补齐重量版本限定，不凭空补参数',()=>{const {sourceConditions}=require('../src/agent.cjs');const d=draft();d.intro='约1.33kg机身';const out=sourceConditions(d,{raw:'约1.33 kg（圆键盘含电池）'});assert.equal(out.intro,'约1.33kg（圆键盘含电池）机身');});
+
+test('纯否定的库存边界提示不当成承诺；免责声明不能遮盖正向库存',()=>{const d=draft();d.cta='本文不提供价格或库存承诺。';assert.ok(!checks(d,p,t).some(x=>x.includes('库存承诺')));d.cta='不保证优惠，库存仅剩10台。';assert.ok(checks(d,p,t).some(x=>x.includes('库存承诺')));});

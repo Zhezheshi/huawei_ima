@@ -1,0 +1,6 @@
+{
+  "active": "local",
+  "localRoot": "参考资料/华为PC全板块深度知识库_v7 2",
+  "official": {"enabled": true, "maxPagesPerProduct": 2},
+  "demoRoot": "demo/knowledge"
+}

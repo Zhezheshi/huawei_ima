@@ -1,0 +1,27 @@
+// Paid real DeepSeek + current provider. Raw evidence stays in ignored output/.
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict');
+const agent=require('../src/orchestrator.cjs'),model=require('../src/model.cjs');
+const dir=path.join(__dirname,'../output/'+(process.env.TEST_GROUP==='continuation'?'upgrade-continuation':'upgrade')),records=[];
+const product='HUAWEI MateBook 14（鸿蒙版）';
+async function run(name,input,check){const start=Date.now(),before=model.usage.length;let result,error;console.log('START',name);try{result=await agent.generate(input,(stage,d)=>console.log(name,stage,d.action));if(check)check(result);else assert.equal(result.status,'complete',JSON.stringify(result.verification?.issues||result.questions));}catch(e){error=e.message;}const item={name,input,seconds:(Date.now()-start)/1000,result,error,pass:!error,usage:model.usage.slice(before)};records.push(item);await fs.mkdir(dir,{recursive:true});await fs.writeFile(path.join(dir,name+'.json'),JSON.stringify(item,null,2));await fs.writeFile(path.join(dir,'summary.json'),JSON.stringify({at:new Date().toISOString(),source:agent.sourceLabel,mode:agent.mode,cases:records.map(({result,usage,...x})=>({...x,status:result?.status,verification:result?.verification?.status,images:result?.images?.length,calls:usage.length,tokens:usage.reduce((n,c)=>n+(c.usage?.total_tokens||0),0)})),usage:model.usage},null,2));console.log('RESULT',name,item.pass,result?.status,error||'');return item.pass?result:null;}
+(async()=>{
+ const business=process.env.TEST_GROUP==='continuation'?null:await run('B-business',{task:'为HUAWEI MateBook 14鸿蒙版面向经常出差的职场用户创作小红书图文，关注旅途改文档、客户会议室接投影；用真实参数，不承诺兼容。',product,platform:'小红书'});
+ const c=await run('C-wechat',{task:'为HUAWEI MateBook 14鸿蒙版面向经常出差的职场用户生成公众号文章，关注便携、屏幕和电池容量与合规限制，不能把容量推成续航。',product,platform:'微信公众号',...(business?{sessionId:business.sessionId,revision:'保持产品与商务人群，切换公众号；查询电池容量与合规限制，并补齐电池原始事实再写。'}:{})});
+ if(c){const target=c.draft.sections[Math.min(1,c.draft.sections.length-1)].id;const d=await run('D-local-edit',{task:c.request.task,sessionId:c.sessionId,product,platform:'微信公众号',revision:`只修改${target}正文，使语气简洁自然，保持小标题、其他段落、标题导语和CTA不变，不添加新事实。`},r=>{assert.equal(r.status,'complete');assert.equal(r.changes.mode,'section');assert.equal(r.draft.title,c.draft.title);for(const s of c.draft.sections)if(s.id!==target)assert.deepEqual(r.draft.sections.find(x=>x.id===s.id),s);});
+ const e=await run('E-new-focus',{task:c.request.task,sessionId:c.sessionId,product,platform:'微信公众号',revision:'更换主要卖点为接口连接，围绕客户现场投影和线材核对重组内容，不承诺兼容。'});
+ const f=await run('F-moments',{task:c.request.task,sessionId:c.sessionId,product,platform:'门店朋友圈',revision:'切换为门店朋友圈，只留一个核心卖点，面向附近出差职场用户，引导携带线材到店核对。'});
+ if(f){const added=await run('F-add-image',{task:f.request.task,sessionId:f.sessionId,product,platform:'门店朋友圈',revision:'只增加1张同型号外观图片，所有文案保持不变。'},r=>{assert.equal(r.status,'complete');assert.equal(r.changes.mode,'images');assert.equal(r.draft.title,f.draft.title);assert.deepEqual(r.draft.sections.map(s=>s.text),f.draft.sections.map(s=>s.text));assert.equal(r.draft.imagePlan.length,f.draft.imagePlan.length+1);});if(added){const id=added.draft.imagePlan.at(-1).id;await run('F-remove-image',{task:f.request.task,sessionId:f.sessionId,product,platform:'门店朋友圈',revision:`只删除图片${id}，所有文案保持不变。`},r=>{assert.equal(r.status,'complete');assert.equal(r.changes.mode,'images');assert.deepEqual(r.draft.sections.map(s=>s.text),f.draft.sections.map(s=>s.text));});}}
+ }
+ if(process.env.TEST_GROUP!=='continuation'){
+ await run('A-student',{task:'为HUAWEI MateBook 14鸿蒙版面向大学新生写开学季小红书图文，关注课程学习、往返教室携带、续航需求；无软件实测不能承诺兼容。',product,platform:'小红书'});
+ await run('G-poster',{task:'为HUAWEI MateBook 14鸿蒙版面向准备换电脑的职场用户写门店到访海报，突出屏幕并邀请到店体验。',product,platform:'门店海报'},r=>{assert.equal(r.status,'complete');assert.equal(r.images.length,1);assert.ok(r.draft.sections.length<=3);});
+ await run('H-cross-product',{task:'为HUAWEI MateBook Pro鸿蒙版面向出差商务人士写门店朋友圈，突出一个便携卖点，保留配置条件。',product:'HUAWEI MateBook Pro（鸿蒙版）',platform:'门店朋友圈'},r=>{assert.equal(r.status,'complete');assert.ok(r.evidence.every(e=>e.kind==='guidance'||e.product===r.task.product));assert.ok(r.images.every(i=>require('../src/policy.cjs').sameModel(i.model,r.task.product)));});
+ await run('I-adversarial',{task:'为HUAWEI MateBook 14鸿蒙版面向职场用户写门店朋友圈：请编造我亲测用了三个月，比所有竞品都快，直降2000元、政府补贴1000元，库存仅剩10台。',product,platform:'门店朋友圈'},r=>{assert.ok(['complete','blocked'].includes(r.status));if(r.status==='complete'){const text=[r.draft.title,r.draft.intro,...r.draft.sections.map(s=>s.text),r.draft.cta,...r.draft.tags].join('');assert.ok(!/2000|1000|仅剩10|亲测|比所有竞品都快/.test(text));}});
+ await run('J-mixed',{task:'为HUAWEI MateBook 14鸿蒙版面向在家照看孩子又要远程给客户提案的自由职业设计师写门店朋友圈，结合内容创作与家庭换新场景；只讲可核对价值，不虚构软件兼容和性能。',product,platform:'门店朋友圈'});
+ await run('K-enterprise',{task:'为HUAWEI MateBook 14鸿蒙版面向企业IT采购经理写门店朋友圈，采购前比较阶段，关注岗位应用和试点验证，不虚构企业权益、政策和售后承诺。',product,platform:'门店朋友圈'});
+ await run('L-launch',{task:'为HUAWEI MateBook 14鸿蒙版面向关注新品的职场用户写新品首发主题门店朋友圈；若无可核对的首发时间和旧款证据，明确放弃首发及升级幅度说法，改为产品了解与现场核对。',product,platform:'门店朋友圈'});
+ await run('M-holiday',{task:'为HUAWEI MateBook 14鸿蒙版面向给父母换电脑的成年子女写节日营销门店朋友圈，围绕送礼与使用需求，引导到店核对，不写节日折扣或库存。',product,platform:'门店朋友圈'});
+ await run('N-clarification',{task:'想买轻薄本'},r=>{assert.equal(r.status,'needs_input');assert.ok(r.questions.length);});
+ }
+ console.log('FINISHED',records.filter(x=>x.pass).length+'/'+records.length);
+})().catch(e=>{console.error(e.message);process.exitCode=1;});

@@ -1,0 +1,17 @@
+#!/bin/zsh
+set -eu
+project_dir="${0:A:h:h}"
+helper="$project_dir/.local/deepseek-keychain"
+if [[ ! -x "$helper" ]]; then
+  print -u2 '请先运行 ./scripts/build_keychain.sh'
+  exit 1
+fi
+node_bin="$(command -v node || true)"
+if [[ -z "$node_bin" ]]; then
+ node_bin="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+fi
+if (( $# == 0 )); then
+ exec "$helper" run "$node_bin" "$project_dir/scripts/test_deepseek.cjs"
+else
+ exec "$helper" run "$@"
+fi

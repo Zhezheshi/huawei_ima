@@ -1,0 +1,12 @@
+#!/bin/zsh
+set -eu
+project_dir="${0:A:h:h}"
+cd "$project_dir"
+node_bin="$(command -v node || true)"
+if [[ -z "$node_bin" ]]; then
+ node_bin="$HOME/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+fi
+if [[ -n "${DEEPSEEK_API_KEY:-}" ]]; then
+ exec "$node_bin" "$project_dir/src/server.cjs"
+fi
+exec "$project_dir/scripts/deepseek" "$node_bin" "$project_dir/src/server.cjs"
