@@ -6,6 +6,7 @@ const settings = require('./server-config.cjs').configure();
 const auth = require('./auth.cjs').createAuth(settings);
 const origin = settings.localOrigin;
 let busy = false;
+const rejectedHosts = new Set();
 const send = (res, status, data) => {
  res.writeHead(status, {'Content-Type':'application/json; charset=utf-8', 'Cache-Control':'no-store'});
  res.end(JSON.stringify(data));
@@ -35,7 +36,13 @@ const server = http.createServer(async (req, res) => {
  const frames = settings.frameAncestors.join(' ') || "'none'";
  res.setHeader('Content-Security-Policy', `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors ${frames}; base-uri 'none'; form-action 'self'; object-src 'none'`);
  try {
-  if (!settings.hosts.has(req.headers.host)) return send(res, 403, {error:'请求主机不允许'});
+  if (!settings.hosts.has(req.headers.host)) {
+   const host = String(req.headers.host || '').slice(0, 255);
+   if (rejectedHosts.size < 5 && !rejectedHosts.has(host)) {
+    rejectedHosts.add(host); console.warn('拒绝未配置的请求主机：' + host);
+   }
+   return send(res, 403, {error:'请求主机不允许'});
+  }
   const u = new URL(req.url, origin);
   if (req.method === 'POST') {
    if (req.headers.origin && !settings.origins.has(req.headers.origin)) return send(res, 403, {error:'请求来源不允许'});

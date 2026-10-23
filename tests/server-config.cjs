@@ -13,3 +13,9 @@ test('容器来源和嵌入来源均按精确HTTPS来源校验，不信任通配
  for(const value of ['*','https://*.modelscope.cn',"'self'",'http://modelscope.cn','https://modelscope.cn/path','https://user:pw@modelscope.cn',"https://modelscope.cn;script-src *"])assert.throws(()=>configure({APP_ORIGIN:'https://review.invalid',APP_FRAME_ANCESTORS:value}));
  assert.throws(()=>configure({APP_FRAME_ANCESTORS:'https://modelscope.cn'}));
 });
+test('平台内部转发Host仅接受显式的精确值，不扩展浏览器Origin',()=>{
+ const c=configure({APP_PROXY_HOSTS:'internal.invalid:7860 localhost'});
+ assert.ok(c.hosts.has('internal.invalid:7860'));assert.ok(c.hosts.has('localhost'));
+ assert.ok(!c.hosts.has('other.internal.invalid:7860'));assert.ok(!c.origins.has('https://internal.invalid:7860'));
+ for(const value of ['*','*.invalid','https://internal.invalid','user:password@host.invalid','host.invalid/path','host.invalid?query=1','host.invalid:0/path'])assert.throws(()=>configure({APP_PROXY_HOSTS:value}));
+});

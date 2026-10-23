@@ -8,6 +8,13 @@ function configure(env = process.env) {
   if (url.origin !== env.APP_ORIGIN || url.protocol !== 'https:' || url.username || url.password || url.hostname.includes('*')) throw Error('APP_ORIGIN须为完整HTTPS来源，不含路径、凭证或通配符');
   origins.add(url.origin); hosts.add(url.host);
  }
+ // Some platforms forward an internal Host. Add only observed, exact values.
+ const proxyHosts = String(env.APP_PROXY_HOSTS || '').trim().split(/\s+/).filter(Boolean);
+ for (const value of proxyHosts) {
+  let url; try { url = new URL('http://' + value); } catch { throw Error('APP_PROXY_HOSTS须为以空格分隔的精确主机及可选端口'); }
+  if (url.host !== value || url.pathname !== '/' || url.search || url.hash || url.username || url.password || url.hostname.includes('*')) throw Error('APP_PROXY_HOSTS须为以空格分隔的精确主机及可选端口');
+  hosts.add(value);
+ }
  const password = env.APP_PASSWORD || '', username = env.APP_USER || 'team';
  if (host === '0.0.0.0' && (!env.APP_ORIGIN || password.length < 16)) throw Error('容器对外监听须配置APP_ORIGIN和至少16字符的APP_PASSWORD');
  if (username.includes(':') || !username.trim() || username.length > 128) throw Error('APP_USER须为有效用户名，不能含冒号');

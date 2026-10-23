@@ -63,3 +63,11 @@ test('真实HTTP：默认本机无口令模式仍可直接使用',async()=>{
   assert.match((await fetch(s.base+'/')).headers.get('content-security-policy'),/frame-ancestors 'none'/);
  }finally{await s.close();}
 });
+test('真实HTTP：精确内部Host仍须登录且不接受伪造的转发来源',async()=>{
+ const s=await start({APP_PROXY_HOSTS:'internal.invalid:7860'});try{
+  const request=(host,cookie)=>new Promise((ok,no)=>{const req=require('node:http').get(s.base+'/api/health',{headers:{host,...(cookie?{cookie}:{}),'X-Forwarded-Host':'review.invalid'}},res=>{res.resume();ok(res.statusCode);});req.on('error',no);});
+  assert.equal(await request('internal.invalid:7860'),401);
+  const cookie=cookieOf(await s.login());assert.equal(await request('internal.invalid:7860',cookie),200);
+  assert.equal(await request('other.internal.invalid:7860',cookie),403);
+ }finally{await s.close();}
+});
