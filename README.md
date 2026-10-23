@@ -97,6 +97,6 @@ python3 scripts/with_deepseek.py node tests/upgrade-live.cjs
 
 完整本地输出在忽略的 `output/acceptance-20261018/`。真实 API、模拟测试、浏览器下载和未测项分别统计。Markdown 和 HTML 都内嵌图片，不依赖服务会话里的 `/api/images/` 链接；部分 Markdown 阅读器会过滤 data URI，此时使用 HTML 离线查看。
 
-魔搭 Docker 部署见 [部署说明](docs/deployment.md)。本机默认仅监听127.0.0.1；容器对外监听必须设置精确 HTTPS 来源与评审访问口令。访问采用页面登录与 HttpOnly Cookie，适配魔搭保留认证头规则；可选配置精确嵌入来源。当前创空间：[Zhezheshi/huawei_ima](https://www.modelscope.cn/studios/Zhezheshi/huawei_ima)。线上状态以更新报告为准。
+魔搭 Docker 部署见 [部署说明](docs/deployment.md)。本机默认仅监听127.0.0.1；容器对外监听必须设置精确 HTTPS 来源与评审访问口令。访问采用页面登录与 HttpOnly Cookie，适配魔搭保留认证头规则；可选配置精确嵌入来源。当前创空间：[打开工作台](https://www.modelscope.cn/studios/Zhezheshi/huawei_ima?mode=full)。Docker已运行、登录验收通过；真实生成目前收到DeepSeek HTTP401，需维护者更新有效Secret，详见更新报告。
 
 当前交付包：[源码与Demo部署包](releases/huawei-pc-agent-20261023.zip)，不含完整知识库、密钥与原始运行记录；校验值见releases/SHA256SUMS.txt。当前报告见[2026-10-23更新报告](docs/acceptance-2026-10-23.md)。
