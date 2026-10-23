@@ -1,6 +1,6 @@
 # 映销 · 华为 PC 营销 Agent
 
-基于 Node.js CommonJS 与已配置的 DeepSeek Flash 的本地营销工作台。现有代码继续开发中，**尚未全部验收通过**，适合队友接续开发；不应当作已完成参赛提交。
+基于 Node.js CommonJS 与 DeepSeek Flash 的营销工作台，支持本地授权资料和公开模拟 Demo。当前版本 **0.4.0**，已完成营销约束回归及 Cookie 登录部署修复。测试结果和部署边界见 [2026-10-23 更新报告](docs/acceptance-2026-10-23.md)；历史真实模型回归另见 [2026-10-18 报告](docs/acceptance-2026-10-18.md)。
 
 ## 当前功能
 
@@ -24,7 +24,7 @@ SOURCE_MODE=demo python3 scripts/with_deepseek.py node src/server.cjs
 
 按终端提示隐藏输入你自己的 DeepSeek API Key，打开 http://127.0.0.1:3210/ 。密钥仅注入子进程，不保存到源码、不发到聊天。若已有安全配置的 `DEEPSEEK_API_KEY` 环境变量，可直接 `SOURCE_MODE=demo npm start`。`.env.example` 仅为配置示例，程序不会自动加载 `.env`。
 
-Demo 下请选择“演示 MateBook A（Windows）”，输入例如“为演示 MateBook A 面向大学新生写开学季小红书图文”。`demo/` 只含少量**模拟参数和项目自绘示意图，非华为官方真实资料**；仍调用真实 DeepSeek，不提供假模型响应。
+Demo 页面会预选“演示 MateBook A（Windows）”，默认需求及八个快捷示例均跟随模拟型号。例如输入“为演示 MateBook A 面向大学新生写开学季小红书图文”。`demo/` 只含少量**模拟参数和项目自绘示意图，非华为官方真实资料**；仍调用真实 DeepSeek，不提供假模型响应。
 
 ## Windows PowerShell
 
@@ -86,7 +86,7 @@ python3 scripts/with_deepseek.py node tests/upgrade-live.cjs
 - 官网能否访问取决于站点限制；无原始证据不能发布规格或效果承诺。检索为轻量关键词排序，非向量检索，未穷尽全库。
 - 独立 LLM 加规则核验可能漏判或误判，不是绝对可靠的事实证明。图片仅核对索引、型号与文件格式，未做视觉识别或授权确认。
 - 不发布具体价格、促销金额、库存及无依据兼容/性能承诺；不合格稿或冲突稿禁止交付。
-- 未实现多用户账号、长期记忆、自动发布或公共部署；魔搭链接、正式说明书和完整初赛提交仍待完成。
+- 未实现独立多用户账号、长期记忆、配额计费或自动发布。魔搭代码仓库已建立，Docker SDK 配置与运行状态见部署报告；源码同步不等于线上生成验收完成。
 - 完整参考资料、真实模型原始输出、凭证、本地缓存及授权不明图片均排除在 Git 之外。
 
 ## 当前修复与验收入口
@@ -97,6 +97,6 @@ python3 scripts/with_deepseek.py node tests/upgrade-live.cjs
 
 完整本地输出在忽略的 `output/acceptance-20261018/`。真实 API、模拟测试、浏览器下载和未测项分别统计。Markdown 和 HTML 都内嵌图片，不依赖服务会话里的 `/api/images/` 链接；部分 Markdown 阅读器会过滤 data URI，此时使用 HTML 离线查看。
 
-魔搭 Docker 部署准备见 [部署说明](docs/deployment.md)。本机默认仅监听127.0.0.1；容器对外监听必须设置精确 HTTPS 来源与评审访问口令。尚未完成公网发布，不提供虚构部署链接。
+魔搭 Docker 部署见 [部署说明](docs/deployment.md)。本机默认仅监听127.0.0.1；容器对外监听必须设置精确 HTTPS 来源与评审访问口令。访问采用页面登录与 HttpOnly Cookie，适配魔搭保留认证头规则；可选配置精确嵌入来源。当前创空间：[Zhezheshi/huawei_ima](https://www.modelscope.cn/studios/Zhezheshi/huawei_ima)。线上状态以更新报告为准。
 
-本轮交付包：[源码与Demo部署包](releases/huawei-pc-agent-20261018.zip)，不含完整知识库、密钥与原始运行记录；校验值见releases/SHA256SUMS.txt。最终报告见[2026-10-18验收报告](docs/acceptance-2026-10-18.md)。
+当前交付包：[源码与Demo部署包](releases/huawei-pc-agent-20261023.zip)，不含完整知识库、密钥与原始运行记录；校验值见releases/SHA256SUMS.txt。当前报告见[2026-10-23更新报告](docs/acceptance-2026-10-23.md)。

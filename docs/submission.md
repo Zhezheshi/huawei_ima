@@ -1,6 +1,6 @@
 # 映销 · 华为 PC 营销 Agent 作品说明书
 
-版本：2026-10-18本机接续开发版。源码仓库：https://github.com/Zhezheshi/huawei_ima 。本轮修复使用fix/marketing-validation分支，按用户最终要求同步GitHub。用户当前选择交付本地版本与部署包，本轮没有魔搭公网链接；用户已取消操作演示视频，不作为已完成正式赛事提交声明。
+版本：0.4.0（2026-10-23）。源码仓库：https://github.com/Zhezheshi/huawei_ima 。创空间：https://www.modelscope.cn/studios/Zhezheshi/huawei_ima 。本版更新部署鉴权和Demo交互，验收与线上边界见[更新报告](acceptance-2026-10-23.md)；原始真实模型验收仍以10月18日报告为准。
 
 ## 目标与实际能力
 
@@ -34,7 +34,7 @@ Node.js 22+、CommonJS，无额外npm依赖；Python 3只用于安全输入密�
 
 规则/模拟测试、真实HTTP、真实DeepSeek及浏览器下载分别统计，失败批次保留；详细数量与用量由验收报告记录。运行方法见README，密钥仅通过安全终端临时注入。Windows可用python scripts/with_deepseek.py node src/server.cjs。
 
-Docker部署准备见[部署说明](deployment.md)：Node.js 24、7860端口、模拟资料、精确HTTPS来源和评审口令。当前机器无Docker，尚未构建镜像或验证魔搭平台；本轮不创建账号或发布公网实例。
+Docker部署准备见[部署说明](deployment.md)：Node.js 24、7860端口、模拟资料、精确HTTPS来源和评审口令。已改用页面登录与Cookie会话，提供可选的精确嵌入来源和无密钥健康检查。目标创空间已切换Docker SDK；当前机器无Docker，镜像与线上生成状态以更新报告为准。
 
 ## 限制
 

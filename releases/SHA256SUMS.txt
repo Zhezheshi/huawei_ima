@@ -1,1 +1,2 @@
 920be4629c0da80c57290c7ceac72c0e5e874cde34a36cb573ebbbc5ff61d7e6  huawei-pc-agent-20261018.zip
+2546ad2e1aa35c9e12f9c1f546418ddef109c56ac22089c47cb5b66cf073ad4c  huawei-pc-agent-20261023.zip

@@ -1,22 +1,65 @@
-// Separate HTTP integration suite: starts a keyless demo process and calls no model.
+// Real HTTP, keyless Demo: no model traffic and no paid API.
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),net=require('node:net'),path=require('node:path');
-test('真实HTTP：评审鉴权、Host/Origin、参数与静态文件边界',async()=>{
+async function start(extra={}){
  const probe=net.createServer();await new Promise(ok=>probe.listen(0,'127.0.0.1',ok));const port=probe.address().port;await new Promise(ok=>probe.close(ok));
- const env={...process.env,SOURCE_MODE:'demo',HOST:'0.0.0.0',PORT:String(port),APP_ORIGIN:'https://review.invalid',APP_PASSWORD:'nonsecret-test-password',DEEPSEEK_API_KEY:''};
+ const env={...process.env,SOURCE_MODE:'demo',OFFICIAL_SEARCH:'0',HOST:'0.0.0.0',PORT:String(port),APP_ORIGIN:'https://review.invalid',APP_PASSWORD:'nonsecret-test-password',APP_FRAME_ANCESTORS:'https://modelscope.cn https://www.modelscope.cn',DEEPSEEK_API_KEY:'',...extra};
  const child=spawn(process.execPath,['src/server.cjs'],{cwd:path.resolve(__dirname,'..'),env,stdio:['ignore','pipe','pipe']});
- try{
-  await new Promise((ok,no)=>{const timer=setTimeout(()=>no(Error('测试服务启动超时')),10000);child.stdout.on('data',data=>{if(data.toString().includes('已启动')){clearTimeout(timer);ok();}});child.once('exit',()=>{clearTimeout(timer);no(Error('测试服务提前退出'));});});
-  const base='http://127.0.0.1:'+port,authorization='Basic '+Buffer.from('team:nonsecret-test-password').toString('base64');
-  const get=(url,headers={})=>fetch(base+url,{headers:{authorization,...headers}});
-  assert.equal((await fetch(base+'/')).status,401);
-  assert.equal((await get('/',{authorization:'Basic '+Buffer.from('team:wrong').toString('base64')})).status,401);
-  const badHost=await new Promise((ok,no)=>{const r=require('node:http').get(base+'/',{headers:{authorization,host:'evil.invalid'}},response=>{response.resume();ok(response.statusCode);});r.on('error',no);});assert.equal(badHost,403);
-  const health=await (await get('/api/health')).json();assert.equal(health.keyConfigured,false);assert.equal(health.mode,'demo');assert.equal(health.identity.mode,'review');
-  assert.equal((await get('/content.js')).status,200);assert.equal((await get('/config/model.json')).status,404);
-  assert.ok((await (await get('/api/products')).json()).products[0].includes('演示'));
-  for(const body of ['not json','null','[]','{}']){const r=await fetch(base+'/api/generate',{method:'POST',headers:{authorization,'Content-Type':'application/json'},body});assert.equal(r.status,400);}
-  const cross=await fetch(base+'/api/generate',{method:'POST',headers:{authorization,'Content-Type':'application/json',Origin:'https://evil.invalid'},body:'{}'});assert.equal(cross.status,403);
-  assert.equal((await (await get('/api/metrics')).json()).calls.length,0);
- }finally{child.kill();}
+ await new Promise((ok,no)=>{const timer=setTimeout(()=>{child.kill();no(Error('测试服务启动超时'));},10000);child.stdout.on('data',data=>{if(data.toString().includes('已启动')){clearTimeout(timer);ok();}});child.once('exit',()=>{clearTimeout(timer);no(Error('测试服务提前退出'));});});
+ const base='http://127.0.0.1:'+port;
+ const post=(url,data,headers={})=>fetch(base+url,{method:'POST',headers:{'Content-Type':'application/json',...headers},body:typeof data==='string'?data:JSON.stringify(data)});
+ const login=()=>post('/api/auth/login',{username:'team',password:env.APP_PASSWORD});
+ return {base,post,login,close:()=>new Promise(ok=>{child.once('exit',ok);child.kill();})};
+}
+const cookieOf=r=>r.headers.get('set-cookie').split(';')[0];
+
+test('真实HTTP：无需Authorization的Cookie登录、刷新、退出与保护边界',async()=>{
+ const s=await start();try{
+  const page=await fetch(s.base+'/');assert.equal(page.status,200);assert.match(await page.text(),/loginForm/);assert.equal(page.headers.get('www-authenticate'),null);
+  assert.match(page.headers.get('content-security-policy'),/frame-ancestors https:\/\/modelscope.cn https:\/\/www.modelscope.cn/);
+  assert.equal((await fetch(s.base+'/login.js')).status,200);
+  assert.deepEqual(await (await fetch(s.base+'/healthz')).json(),{status:'ok'});
+  for(const url of ['/api/health','/api/products','/api/metrics','/api/sources','/api/images/test','/api/sessions/test','/app.js'])assert.equal((await fetch(s.base+url)).status,401);
+  const basic='Basic '+Buffer.from('team:nonsecret-test-password').toString('base64');
+  assert.equal((await fetch(s.base+'/api/health',{headers:{Authorization:basic}})).status,401);
+  assert.equal((await s.post('/api/auth/login',{username:'team',password:'wrong'})).status,401);
+  const login=await s.login();assert.equal(login.status,200);assert.match(login.headers.get('set-cookie'),/SameSite=None; Secure/);
+  const cookie=cookieOf(login),headers={cookie,Authorization:'Bearer platform-owned-header'};
+  const app=await fetch(s.base+'/',{headers});assert.equal(app.status,200);assert.match(await app.text(),/id="task"/);
+  const health=await (await fetch(s.base+'/api/health',{headers})).json();assert.equal(health.keyConfigured,false);assert.equal(health.mode,'demo');
+  assert.ok((await (await fetch(s.base+'/api/products',{headers})).json()).products[0].includes('演示'));
+  const refresh=await s.post('/api/auth/login',{username:'team',password:'nonsecret-test-password'},headers);assert.equal(refresh.status,200);
+  assert.equal((await fetch(s.base+'/api/health',{headers:{cookie}})).status,401);
+  const next=cookieOf(refresh);assert.equal((await s.post('/api/auth/logout',{}, {cookie:next})).status,200);
+  assert.equal((await fetch(s.base+'/api/health',{headers:{cookie:next}})).status,401);
+ }finally{await s.close();}
+});
+test('真实HTTP：Host/Origin、JSON、请求大小、无密钥与私有文件边界',async()=>{
+ const s=await start();try{
+  const cookie=cookieOf(await s.login());
+  const badHost=await new Promise((ok,no)=>{const r=require('node:http').get(s.base+'/',{headers:{cookie,host:'evil.invalid','x-forwarded-host':'review.invalid'}},response=>{response.resume();ok(response.statusCode);});r.on('error',no);});assert.equal(badHost,403);
+  for(const url of ['/api/auth/login','/api/auth/logout','/api/generate'])assert.equal((await s.post(url,{}, {cookie,Origin:'https://evil.invalid'})).status,403);
+  assert.equal((await fetch(s.base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'text/plain'},body:'{}'})).status,415);
+  assert.equal((await s.post('/api/generate',{}, {cookie,'Content-Type':'application/jsonp'})).status,415);
+  for(const body of ['not json','null','[]','{}','{"task":123}','{"task":"test","platform":[]}'])assert.equal((await s.post('/api/generate',body,{cookie})).status,400);
+  assert.equal((await s.post('/api/auth/login',{password:'x'.repeat(5000)})).status,413);
+  assert.equal((await s.post('/api/generate',{task:'x'.repeat(31000)},{cookie})).status,413);
+  const missing=await s.post('/api/generate',{task:'为演示 MateBook A 写门店海报'},{cookie});assert.equal(missing.status,503);assert.match((await missing.json()).error,/未配置/);
+  for(const url of ['/config/model.json','/src/server.cjs','/.env','/.git/config'])assert.equal((await fetch(s.base+url,{headers:{cookie}})).status,404);
+  assert.equal((await (await fetch(s.base+'/api/metrics',{headers:{cookie}})).json()).calls.length,0);
+ }finally{await s.close();}
+});
+test('真实HTTP：口令猜测限流返回429与Retry-After',async()=>{
+ const s=await start();try{
+  for(let i=0;i<10;i++)assert.equal((await s.post('/api/auth/login',{username:'team',password:'wrong'})).status,401);
+  const blocked=await s.login();assert.equal(blocked.status,429);assert.ok(Number(blocked.headers.get('retry-after'))>0);
+ }finally{await s.close();}
+});
+test('真实HTTP：默认本机无口令模式仍可直接使用',async()=>{
+ const s=await start({HOST:'127.0.0.1',APP_ORIGIN:'',APP_PASSWORD:'',APP_FRAME_ANCESTORS:''});try{
+  assert.match(await (await fetch(s.base+'/')).text(),/id="task"/);
+  assert.deepEqual(await (await fetch(s.base+'/api/auth/status')).json(),{required:false,authenticated:true});
+  assert.equal((await fetch(s.base+'/api/products')).status,200);
+  assert.match((await fetch(s.base+'/')).headers.get('content-security-policy'),/frame-ancestors 'none'/);
+ }finally{await s.close();}
 });

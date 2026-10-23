@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录 · 映销</title><link rel="stylesheet" href="/style.css"></head>
+<body class="login-page"><main class="panel login-panel"><div class="panel-head"><span class="brand-icon">映</span><h1>映销 · 评审访问</h1></div>
+<form id="loginForm"><p>输入维护者提供的用户名与访问口令，进入华为 PC 营销工作台。</p>
+<label for="username">用户名</label><input id="username" name="username" autocomplete="username" maxlength="128" value="team" required>
+<label for="password">访问口令</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="1024" required>
+<p class="login-note">此处填写评审口令；DeepSeek 密钥由维护者在服务端配置。</p>
+<button class="primary" id="loginButton" type="submit">进入工作台 <span>→</span></button><p id="loginError" role="alert" hidden></p>
+<p class="login-note">访问会话有效期 8 小时，服务重启后需重新登录。若嵌入页面无法保持登录，请<a href="/login" target="_blank" rel="noopener noreferrer">在新窗口打开工作台</a>。</p>
+</form></main><script src="/login.js"></script></body></html>

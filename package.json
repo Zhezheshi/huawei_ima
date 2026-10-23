@@ -1,6 +1,6 @@
 {
   "name": "huawei-pc-marketing-agent",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Evidence-driven Huawei PC marketing agent with staged DeepSeek roles",
   "engines": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "node src/server.cjs",
-    "test": "node --test tests/core.cjs tests/privacy.cjs tests/model-errors.cjs tests/round2.cjs tests/official.cjs tests/upgrade.cjs tests/validation.cjs tests/server-config.cjs",
+    "test": "node --test tests/core.cjs tests/privacy.cjs tests/model-errors.cjs tests/round2.cjs tests/official.cjs tests/upgrade.cjs tests/validation.cjs tests/server-config.cjs tests/auth.cjs",
     "test:live": "node tests/upgrade-live.cjs",
     "test:acceptance": "node tests/acceptance-live.cjs",
     "test:http": "node --test tests/server-http.cjs"

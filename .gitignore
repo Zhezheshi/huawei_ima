@@ -34,3 +34,4 @@ dist/
 
 # Reviewed source/Demo deployment archive only; all other ZIPs stay private.
 !/releases/huawei-pc-agent-20261018.zip
+!/releases/huawei-pc-agent-20261023.zip

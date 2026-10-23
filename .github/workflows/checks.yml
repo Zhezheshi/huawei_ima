@@ -1,0 +1,47 @@
+name: Application and container checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  application:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      - run: npm run test:http
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build public Demo image
+        run: docker build -t yingxiao-check .
+      - name: Start keyless, protected Demo and check liveness
+        shell: bash
+        run: |
+          docker run -d --name yingxiao-check -p 127.0.0.1:7860:7860 \
+            -e APP_ORIGIN=https://review.invalid \
+            -e APP_PASSWORD=nonsecret-ci-test-password yingxiao-check
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:7860/healthz; then
+              test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:7860/api/products)" = 401
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs yingxiao-check
+          exit 1
+      - name: Container logs and cleanup
+        if: always()
+        run: |
+          docker logs yingxiao-check || true
+          docker rm -f yingxiao-check || true

@@ -1,36 +1,66 @@
-# 魔搭创空间部署准备
+# 魔搭 Docker 部署
 
-状态：已提供 Docker 启动与访问保护配置；本机无 Docker，尚未构建镜像，也未取得魔搭账号、创建创空间或验证公网链接。不能将本页记作已部署。
+版本：0.4.0（2026-10-23）。目标创空间为 [Zhezheshi/huawei_ima](https://www.modelscope.cn/studios/Zhezheshi/huawei_ima)，运行域名为 `https://zhezheshi-huawei-ima.ms.show`。目标 SDK 已从 Gradio 改为 Docker，保留免费 `platform/2v-cpu-8g-mem` 资源。代码、容器构建、运行及真实模型验收是不同状态，最新结果见[更新报告](acceptance-2026-10-23.md)。
 
-## 部署包
+## 容器与数据
 
-仓库根目录 `Dockerfile` 使用 Node.js 24，前后端同一容器，监听 `0.0.0.0:7860`。此端口按魔搭 Docker 创空间部署约定准备，创建时仍须核对平台当前要求：[官方 Docker 文档](https://modelscope.cn/docs/studios/docker)。当前工具未能直接读取该文档全文，因此尚未验证平台当前的创建表单、资源选项或账号资格。
+根目录 Dockerfile 使用 Node.js 24，监听 `0.0.0.0:7860`，以非 root 用户运行。镜像只复制源码、模型/来源配置、Web 与模拟 Demo，不复制完整授权知识库、密钥、本地缓存、视频或 output。无需 npm install，运行时没有额外 npm 依赖。
 
-镜像只复制源码、模型/来源配置、Web 与模拟 Demo，不包含完整知识库、密钥或 output。公开评审默认使用模拟 Demo，页面与交付稿始终提示其非官方事实；模型仍调用真实 DeepSeek。
+公开 Demo 的参数、图片均明确标为模拟；模型仍为真实 DeepSeek，未配置密钥时可查看界面，生成按钮禁用，接口返回明确的503。不得把 Demo 内容当作华为真实产品资料。真实资料需要另行确认上传授权和私有存储方案。
 
-在创空间项目设置中配置以下环境变量，不写进 Dockerfile 或 Git：
+## 创空间设置
 
-| 变量 | 用途 |
-|---|---|
-| `DEEPSEEK_API_KEY` | DeepSeek 后端密钥，使用平台的私密变量/Secret功能 |
-| `APP_ORIGIN` | 创空间真实 HTTPS 访问源，例如平台分配的 `https://具体域名`，不含路径或尾部斜杠 |
-| `APP_PASSWORD` | 至少16字符的评审访问口令；缺失则对外监听拒绝启动 |
-| `APP_USER` | 可选访问用户名，默认 `team` |
+在设置中选择 **Docker SDK**。平台 Docker 文档要求阿里云账号绑定和实名验证，这类账号操作由持有人完成；仅选用已查询可用的免费资源。
 
-公网访问由浏览器弹出 Basic Auth 登录提示，用户名和口令经创空间 HTTPS 传输；不要填写 DeepSeek API Key。此口令保护用于单团队评审，未实现独立多用户账号、用户隔离和计费配额，分享口令即分享该评审实例的模型使用权限。需要开放不受限公众访问时，应先设计用户鉴权与配额。
+在创空间变量设置中填写以下值，不把私密值写入 Git、README 或 Dockerfile：
 
-`HOST`、`PORT`、`SOURCE_MODE` 和 `OFFICIAL_SEARCH` 已在镜像中默认配置。不能把完整授权知识库放入公开镜像；如后续部署真实资料，应先确认上传授权和平台私有存储方案，并显式设置 `KNOWLEDGE_ROOT`。
+| 类型 | 名称 | 值或用途 |
+|---|---|---|
+| Secret | `DEEPSEEK_API_KEY` | 用户授权存入此创空间的后端模型密钥 |
+| Secret | `APP_PASSWORD` | 至少16字符的随机评审口令，访问者凭此使用团队模型额度 |
+| Variable | `APP_ORIGIN` | `https://zhezheshi-huawei-ima.ms.show`，不含路径或尾部斜杠 |
+| Variable | `APP_USER` | 可选，默认 `team` |
+| Variable | `APP_FRAME_ANCESTORS` | 可选：`https://modelscope.cn https://www.modelscope.cn`，允许创空间页面嵌入 |
 
-## 本地容器检查（需安装 Docker）
+镜像已默认配置 `HOST=0.0.0.0`、`PORT=7860`、`SOURCE_MODE=demo`、`OFFICIAL_SEARCH=0`。缺少精确HTTPS来源或足够长度的口令时，对外监听拒绝启动。更换域名应同时更新 APP_ORIGIN；不信任任意 X-Forwarded-Host，不使用通配来源绕过检查。
+
+## 登录与嵌入
+
+平台保留 `Authorization`、`X-modelscope-*` 和 `X-studio-*` 请求头，所以应用评审登录使用 JSON 表单和 Cookie，不再使用 Basic Auth。后端向 DeepSeek 官方 API 发起请求所需的 Authorization 不经过创空间入口，仍正常保留。
+
+- 用户打开首页后输入用户名和评审口令。登录不会收集 DeepSeek 密钥。
+- 访问令牌为随机值，服务器只在内存保存其摘要；Cookie 使用 HttpOnly、Path=/，外部HTTPS部署还使用 Secure 与 `__Host-` 前缀，不设置 Domain。
+- 有效期8小时；退出、重新登录、服务器重启会使相应旧会话失效。最多保留64个访问会话，超出后淘汰最早一个。
+- 默认 SameSite=Lax、禁止嵌入；显式配置精确嵌入来源时使用 SameSite=None/Secure。若浏览器阻止第三方Cookie，登录页提供“在新窗口打开工作台”，不会反复跳转。
+- 每分钟累计10次失败登录后暂时限流，返回429和Retry-After。此限流按单个服务实例共享，不信任可伪造的代理IP。
+- POST要求JSON，携带的Origin必须在精确来源白名单中。会话过期时前端转到登录页；退出会清除当前浏览器保存的创作会话编号。
+
+此机制用于单团队评审，不是独立多用户账号或用量隔离。分享评审口令意味着分享该实例的模型使用权限；不适合无限制公众试用。
+
+## 健康与长任务
+
+`GET /healthz` 为无需登录的最小存活检查，只返回 `{"status":"ok"}`，不会调用模型或披露配置。Docker HEALTHCHECK 使用此地址。它不代表密钥有效、资料可用或模型生成已验收；受保护的 `/api/health` 可检查密钥是否配置与资料模式。
+
+生成接口返回NDJSON，提前刷新响应头，并每10秒发送一个无内容的heartbeat事件；浏览器忽略心跳，只展示实际阶段与结果。响应设置 `X-Accel-Buffering: no`，减少代理缓存阶段信息的风险。真实平台仍须验证自身的最长请求时限。
+
+## 本地验证
 
 ```sh
+npm test
+npm run test:http
+# 需本机装有Docker；以下口令从环境变量安全注入，不写真实值到命令历史。
 docker build -t huawei-pc-agent .
-# 以下环境变量应事先从安全终端或私密配置注入，不把值写进命令历史。
 docker run --rm -p 127.0.0.1:7860:7860 \
-  -e DEEPSEEK_API_KEY -e APP_PASSWORD \
-  -e APP_ORIGIN=https://localhost -e APP_USER=team huawei-pc-agent
+  -e APP_PASSWORD -e DEEPSEEK_API_KEY \
+  -e APP_ORIGIN=https://localhost huawei-pc-agent
 ```
 
-本地调试使用 `http://127.0.0.1:7860`，该地址仅映射本机；正式创空间必须通过平台 HTTPS 访问。服务保留精确 Host/Origin 检查，不信任任意 `X-Forwarded-Host`。如果平台转发了其他 Host，应以实际部署日志中的无凭证请求信息核对平台配置，不使用通配域名放开检查。
+带 Secure Cookie 的容器配置应通过HTTPS反向代理进行登录测试；仅用 `http://127.0.0.1:7860/healthz` 检查本地容器存活。纯本机开发不设置 APP_ORIGIN、HOST=0.0.0.0 和口令时仍可直接打开工作台。
 
-部署后逐项验证：未登录拒绝、登录后首页和产品列表、真实模型生成、同源修改、图片加载、两种导出、重启后会话失效、错误反馈与模型用量。只有实际完成后才在覆盖报告填写公网地址与通过状态。
+CI执行Node.js 22/24的自动测试和HTTP测试，并在Linux执行Docker构建及无密钥容器健康检查。测试用口令仅为公开测试夹具，不可作为真实评审口令。
+
+## 发布后验收
+
+源码推送后，在已配置私密变量且账号具备Docker资格的前提下触发部署。先检查build日志，再检查run日志，确认运行后逐项验收：未登录保护、登录与退出、产品列表、真实模型生成、同源修改、图片加载、两种导出、重启后失效和用量。线上真实生成会产生DeepSeek用量，不能用本地模拟测试代替。
+
+官方参考：[Docker约束与端口](https://github.com/modelscope/modelscope-skills/blob/main/skills/ms-studio-deploy/references/docker-templates.md)、[创空间API与配置](https://github.com/modelscope/modelscope-skills/blob/main/skills/ms-studio-deploy/references/openapi-studio-endpoints.md)。
