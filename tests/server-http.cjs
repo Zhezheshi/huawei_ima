@@ -71,3 +71,14 @@ test('真实HTTP：精确内部Host仍须登录且不接受伪造的转发来源
   assert.equal(await request('other.internal.invalid:7860',cookie),403);
  }finally{await s.close();}
 });
+test('真实HTTP：魔搭动态函数Host保留登录与Origin校验；健康探测仅返回最小状态',async()=>{
+ const s=await start({APP_ORIGIN:'https://review.ms.show',APP_PROXY_MODE:'modelscope'});try{
+  const request=(url,host,cookie)=>new Promise((ok,no)=>{const req=require('node:http').get(s.base+url,{headers:{host,...(cookie?{cookie}:{})}},res=>{let body='';res.on('data',b=>body+=b);res.on('end',()=>ok({status:res.statusCode,body}));});req.on('error',no);});
+  assert.deepEqual(await request('/healthz','21.0.0.1:7860'),{status:200,body:'{"status":"ok"}'});
+  const host='studio-review-abcdefgh.cn-beijing-vpc.fcapp.run';
+  assert.equal((await request('/api/products',host)).status,401);
+  const cookie=cookieOf(await s.login());assert.equal((await request('/api/health',host,cookie)).status,200);
+  const cross=await s.post('/api/generate',{}, {cookie,Origin:'https://evil.invalid'});assert.equal(cross.status,403);
+  assert.equal((await request('/api/health','evil.fcapp.run',cookie)).status,403);
+ }finally{await s.close();}
+});

@@ -36,14 +36,16 @@ const server = http.createServer(async (req, res) => {
  const frames = settings.frameAncestors.join(' ') || "'none'";
  res.setHeader('Content-Security-Policy', `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; frame-ancestors ${frames}; base-uri 'none'; form-action 'self'; object-src 'none'`);
  try {
-  if (!settings.hosts.has(req.headers.host)) {
+  const u = new URL(req.url, origin);
+  // Public liveness has no configuration or credentials, including for platform IP probes.
+  if (req.method === 'GET' && u.pathname === '/healthz') return send(res, 200, {status:'ok'});
+  if (!settings.acceptsHost(req.headers.host)) {
    const host = String(req.headers.host || '').slice(0, 255);
    if (rejectedHosts.size < 5 && !rejectedHosts.has(host)) {
     rejectedHosts.add(host); console.warn('拒绝未配置的请求主机：' + host);
    }
    return send(res, 403, {error:'请求主机不允许'});
   }
-  const u = new URL(req.url, origin);
   if (req.method === 'POST') {
    if (req.headers.origin && !settings.origins.has(req.headers.origin)) return send(res, 403, {error:'请求来源不允许'});
    if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return send(res, 415, {error:'请使用JSON请求'});
@@ -56,8 +58,6 @@ const server = http.createServer(async (req, res) => {
     return send(res, result.status, result.error ? {error:result.error} : {authenticated:true});
    }
   }
-  // Public liveness: no model call or configuration disclosure.
-  if (req.method === 'GET' && u.pathname === '/healthz') return send(res, 200, {status:'ok'});
   if (req.method === 'GET' && u.pathname === '/api/auth/status') return send(res, 200, {required:auth.required, authenticated:auth.authorized(req.headers.cookie)});
   if (req.method === 'GET' && ['/login.js', '/style.css'].includes(u.pathname)) return await staticFile(res, u.pathname.slice(1));
   const authorized = auth.authorized(req.headers.cookie);

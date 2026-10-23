@@ -19,3 +19,11 @@ test('平台内部转发Host仅接受显式的精确值，不扩展浏览器Orig
  assert.ok(!c.hosts.has('other.internal.invalid:7860'));assert.ok(!c.origins.has('https://internal.invalid:7860'));
  for(const value of ['*','*.invalid','https://internal.invalid','user:password@host.invalid','host.invalid/path','host.invalid?query=1','host.invalid:0/path'])assert.throws(()=>configure({APP_PROXY_HOSTS:value}));
 });
+test('显式魔搭代理模式只接受已观测的平台函数域名语法，保持精确浏览器来源',()=>{
+ const env={HOST:'0.0.0.0',APP_ORIGIN:'https://review.ms.show',APP_PASSWORD:'nonsecret-test-password',APP_PROXY_MODE:'modelscope'};
+ const c=configure(env);assert.ok(c.acceptsHost('studio-review-abcdefgh.cn-beijing-vpc.fcapp.run'));
+ for(const host of ['evil.invalid','evil.cn-beijing-vpc.fcapp.run','studio-test.cn-beijing.fcapp.run','studio-test.cn-beijing-vpc.fcapp.run.evil.invalid','studio-test.cn-beijing-vpc.fcapp.run:444'])assert.equal(c.acceptsHost(host),false);
+ assert.ok(!c.origins.has('https://studio-review-abcdefgh.cn-beijing-vpc.fcapp.run'));
+ assert.ok(!configure({}).acceptsHost('studio-review-abcdefgh.cn-beijing-vpc.fcapp.run'));
+ for(const change of [{APP_ORIGIN:'https://review.invalid'},{HOST:'127.0.0.1'},{APP_PROXY_MODE:'any'}])assert.throws(()=>configure({...env,...change}));
+});

@@ -25,6 +25,9 @@ function configure(env = process.env) {
  }
  const secureCookie = !!env.APP_ORIGIN;
  if (frameAncestors.length && !secureCookie) throw Error('嵌入页面须配置HTTPS APP_ORIGIN');
- return {host, port, localOrigin, origins, hosts, password, username, secureCookie, frameAncestors};
+ const proxyMode = env.APP_PROXY_MODE || '';
+ if (proxyMode && (proxyMode !== 'modelscope' || host !== '0.0.0.0' || !/^https:\/\/[a-z0-9-]+\.ms\.show$/.test(env.APP_ORIGIN || ''))) throw Error('APP_PROXY_MODE仅支持带精确ms.show来源的魔搭容器模式');
+ const acceptsHost = value => hosts.has(value) || proxyMode === 'modelscope' && /^studio-[a-z0-9-]{8,100}\.cn-beijing-vpc\.fcapp\.run$/.test(value || '');
+ return {host, port, localOrigin, origins, hosts, password, username, secureCookie, frameAncestors, acceptsHost};
 }
 module.exports = {configure};
