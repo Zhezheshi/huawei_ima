@@ -1,0 +1,39 @@
+// Capture the original app with frozen, historical accepted results. No model API is called.
+const fs=require('node:fs');const path=require('node:path');const http=require('node:http');
+const {createRequire}=require('node:module');
+const bundled=process.env.PLAYWRIGHT_MODULE||'playwright';
+const {chromium}=require(bundled);
+const root=path.resolve(__dirname,'..'), app=path.resolve(process.env.CAPTURE_APP_ROOT||path.join(root,'../web')), history=path.resolve(process.env.CAPTURE_HISTORY_ROOT||path.join(root,'../output/acceptance-20261018'));
+const out=path.join(root,'public/textures');fs.mkdirSync(out,{recursive:true});
+const cases={moments:'browser/ui-version-1',add:'browser/ui-version-2',remove:'browser/ui-version-3',wechat:'continuation-final/C-wechat',edit:'continuation-final/D-local-edit',title:'continuation-final/D-title-only',student:'targeted/A-student',poster:'final/G-poster'};
+const Content=require(path.join(app,'content.js'));
+function sanitize(v){if(Array.isArray(v))return v.map(sanitize);if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).filter(([k])=>!['sessionId','usage','metrics','tokens','calls'].includes(k)).map(([k,v])=>[k,sanitize(v)]));if(typeof v==='string')return v.replace(/[A-Z]:\\Users\\[^\s\n]+/gi,'[本地路径已隐藏]');return v;}
+function load(name){const data=JSON.parse(fs.readFileSync(path.join(history,cases[name]+'.json'),'utf8'));const r=sanitize(data.result);for(const i of r.images){const found=path.join(path.resolve(process.env.KNOWLEDGE_ROOT||'AUTHORIZED_KNOWLEDGE_ROOT_REQUIRED'),i.relativePath||'');if(!fs.existsSync(found))throw Error('Missing local image for '+name);const bytes=fs.readFileSync(found);const ext=found.endsWith('.png')?'png':'jpeg';i.url=`data:image/${ext};base64,${bytes.toString('base64')}`;}return {result:r,input:data.input};}
+const data=Object.fromEntries(Object.keys(cases).map(k=>[k,load(k)]));
+const css=fs.readFileSync(path.join(app,'style.css'),'utf8');
+const server=http.createServer((req,res)=>{const p=new URL(req.url,'http://localhost').pathname;const name=new URL(req.url,'http://localhost').searchParams.get('case')||'moments';if(p==='/export'){res.setHeader('Content-Type','text/html;charset=utf-8');const r=data[name].result;return res.end(Content.html(r,css,Object.fromEntries(r.images.map(i=>[i.id,i.url]))));}if(p==='/styleframe'){res.setHeader('Content-Type','text/html;charset=utf-8');return res.end(fs.readFileSync(path.join(root,'styleframe.html')));}const f=path.join(app,p==='/'?'index.html':p.slice(1));if(!f.startsWith(app)||!fs.existsSync(f)){res.statusCode=404;return res.end();}res.setHeader('Content-Type',f.endsWith('.css')?'text/css':f.endsWith('.js')?'text/javascript':'text/html;charset=utf-8');res.end(fs.readFileSync(f));});
+function box(b){return {x:b.x,y:b.y,w:b.width,h:b.height};}
+(async()=>{await new Promise(ok=>server.listen(3230,'127.0.0.1',ok));const browser=await chromium.launch({headless:true,executablePath:require('./browser.cjs').findChrome()});const page=await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:2});
+let current='moments';await page.route('**/api/**',async route=>{const u=route.request().url();let body={};if(u.includes('/health'))body={source:'本地资料 · 历史实测',mode:'local',keyConfigured:false};else if(u.includes('/products'))body={products:[data[current].result.task.product]};else if(u.includes('/sessions/'))body=data[current].result;return route.fulfill({json:body});});
+const layouts={};
+async function shot(sel,file){const el=page.locator(sel).first();await el.screenshot({path:path.join(out,file+'.png')});const b=await el.boundingBox(),s=await page.evaluate(()=>({x:scrollX,y:scrollY}));return {x:b.x+s.x,y:b.y+s.y,w:b.width,h:b.height};}
+await page.goto('http://127.0.0.1:3230/styleframe');await page.evaluate(()=>document.fonts.ready);for(let i=0;i<3;i++)await page.locator('.frame').nth(i).screenshot({path:path.join(root,`out/qa/styleframe-${i+1}.png`)});
+for(const name of Object.keys(cases)){current=name;await page.goto('http://127.0.0.1:3230/');await page.evaluate(()=>sessionStorage.setItem('yx-session','recorded-promo'));await page.reload();await page.waitForSelector('#output .article');await page.evaluate(()=>document.fonts.ready);await page.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth));await page.waitForTimeout(650);
+await page.evaluate(()=>{document.querySelectorAll('#pipeline span').forEach(e=>e.className='done');document.querySelector('#identityStatus').textContent='历史实测画面 · 2026-10-18';document.querySelector('#sourceStatus').textContent='本地资料 · 冻结会话用于视频展示';});
+await page.screenshot({path:path.join(out,name+'-full.png'),fullPage:true});layouts[name]={pageH:await page.evaluate(()=>document.documentElement.scrollHeight)};
+layouts[name].input=await shot('.input-panel',name+'-input');layouts[name].article=await shot('#output',name+'-article');layouts[name].strategy=await shot('.insight-block:nth-child(2)',name+'-strategy');layouts[name].toolbar=await shot('.toolbar',name+'-toolbar');
+if(name==='moments'){
+layouts[name].revision=await shot('#revisionTools','revision');layouts[name].task=await shot('#task','task');
+await page.locator('.insight-block:nth-child(3) details').first().evaluate(e=>e.open=true);await page.locator('.insight-block:nth-child(3) details').nth(1).evaluate(e=>e.open=true);
+layouts[name].evidence=await shot('.insight-block:nth-child(3)','evidence');layouts[name].audit=await shot('.insight-block:nth-child(4)','audit');
+const elements=await page.locator('.insight-block:nth-child(3) details').all();layouts[name].evidenceRows=[];for(let i=0;i<Math.min(5,elements.length);i++){const el=elements[i];await el.screenshot({path:path.join(out,`evidence-row-${i}.png`)});const b=await el.boundingBox(),s=await page.evaluate(()=>({x:scrollX,y:scrollY}));layouts[name].evidenceRows.push({x:b.x+s.x,y:b.y+s.y,w:b.width,h:b.height});}
+await page.screenshot({path:path.join(out,'evidence-full.png'),fullPage:true});layouts.evidencePageH=await page.evaluate(()=>document.documentElement.scrollHeight);
+await page.locator('.insight-block:nth-child(4) details').first().evaluate(e=>e.open=true);await shot('.insight-block:nth-child(4)','audit-open');
+await page.locator('.insight-block:nth-child(3) details').evaluateAll(es=>es.forEach(e=>e.open=false));
+layouts.evidenceCompact={box:await shot('.insight-block:nth-child(3)','evidence-compact'),rows:[]};
+for(let i=0;i<5;i++){const el=page.locator('.insight-block:nth-child(3) details').nth(i);await el.screenshot({path:path.join(out,`compact-row-${i}.png`)});const b=await el.boundingBox(),s=await page.evaluate(()=>({x:scrollX,y:scrollY}));layouts.evidenceCompact.rows.push({x:b.x+s.x,y:b.y+s.y,w:b.width,h:b.height});}
+}
+await page.goto('http://127.0.0.1:3230/export?case='+name);await page.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth));await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:path.join(out,`${name}-export.png`),fullPage:true});await page.locator('.article').screenshot({path:path.join(out,`${name}-export-content.png`)});layouts[name].exportH=await page.evaluate(()=>document.documentElement.scrollHeight);
+console.log('captured',name,layouts[name].pageH);
+}
+await browser.close();server.close();fs.writeFileSync(path.join(out,'layout.json'),JSON.stringify(layouts,null,2));fs.writeFileSync(path.join(root,'src/layout.json'),JSON.stringify(layouts,null,2));fs.writeFileSync(path.join(root,'docs/capture-record.json'),JSON.stringify({date:'2026-10-22',source:'original web application, accepted historical model results 2026-10-18',viewport:[1920,1080],scale:2,cases:Object.keys(cases),network:'No model API calls; all page assets local',sanitized:['sessionId','usage','absolute paths']},null,2));})().catch(e=>{console.error(e);server.close();process.exit(1)});

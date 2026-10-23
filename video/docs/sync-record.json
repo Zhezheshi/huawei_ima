@@ -1,0 +1,24 @@
+{
+  "pipeline": "Remotion 4.0.484 / AAC 48kHz / H.264 MP4",
+  "method": "three voice waveform probes, normalized cross-correlation, decoded mono 24kHz",
+  "records": [
+    {
+      "probe": "brand",
+      "expectedFrame": 10,
+      "actualFrame": 11.27,
+      "offsetFrames": 1.27
+    },
+    {
+      "probe": "strategy",
+      "expectedFrame": 610,
+      "actualFrame": 611.27,
+      "offsetFrames": 1.27
+    },
+    {
+      "probe": "audit",
+      "expectedFrame": 1570,
+      "actualFrame": 1571.27,
+      "offsetFrames": 1.27
+    }
+  ]
+}

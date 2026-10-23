@@ -1,0 +1,10 @@
+
+> shotcraft-workbench@0.1.0 parity
+> node scripts/parity.mjs --frames 555,890,2655
+
+bundling…
+f555: ✓ 一致  差异像素 0/2073600 (0.000%)，最大通道差 0
+f890: ✓ 一致  差异像素 0/2073600 (0.000%)，最大通道差 0
+f2655: ✓ 一致  差异像素 0/2073600 (0.000%)，最大通道差 0
+
+3 帧全部一致，PNG 见 制作机video-shotcraft/workbench/.parity（历史本地证据，未随本工程上传）

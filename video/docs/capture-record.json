@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-22",
+  "source": "original web application, accepted historical model results 2026-10-18",
+  "viewport": [
+    1920,
+    1080
+  ],
+  "scale": 2,
+  "cases": [
+    "moments",
+    "add",
+    "remove",
+    "wechat",
+    "edit",
+    "title",
+    "student",
+    "poster"
+  ],
+  "network": "No model API calls; all page assets local",
+  "sanitized": [
+    "sessionId",
+    "usage",
+    "absolute paths"
+  ]
+}

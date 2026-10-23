@@ -1,0 +1,27 @@
+{
+  "soft": {
+    "peakFrame": 13.595,
+    "maxAmplitude": 1.2695,
+    "seconds": 1.2748
+  },
+  "sweep": {
+    "peakFrame": 10.0938,
+    "maxAmplitude": 0.9039,
+    "seconds": 0.7814
+  },
+  "impact": {
+    "peakFrame": 18.9737,
+    "maxAmplitude": 1.2799,
+    "seconds": 4.0631
+  },
+  "shimmer": {
+    "peakFrame": 27.8925,
+    "maxAmplitude": 1.1116,
+    "seconds": 2.9982
+  },
+  "click": {
+    "peakFrame": 15.3663,
+    "maxAmplitude": 0.932,
+    "seconds": 1.5802
+  }
+}

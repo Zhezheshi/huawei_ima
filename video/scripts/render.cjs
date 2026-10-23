@@ -1,0 +1,12 @@
+const {bundle}=require('@remotion/bundler');
+const {renderMedia,selectComposition}=require('@remotion/renderer');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const noBgm=process.argv.includes('--nobgm');
+const output=process.argv.find(a=>a.endsWith('.mp4'))||'out/promo.mp4';
+(async()=>{const serveUrl=await bundle({entryPoint:path.join(root,'src/index.ts')});
+const inputProps={bgm:!noBgm};
+const comp=await selectComposition({serveUrl,id:'YingxiaoPromo',inputProps,browserExecutable:require('./browser.cjs').findChrome()});
+let last=-1;
+await renderMedia({composition:comp,serveUrl,codec:'h264',outputLocation:path.resolve(root,output),inputProps,browserExecutable:require('./browser.cjs').findChrome(),concurrency:3,crf:18,pixelFormat:'yuv420p',audioCodec:'aac',audioBitrate:'192k',imageFormat:'jpeg',jpegQuality:95,chromiumOptions:{gl:'angle'},onProgress:({renderedFrames,encodedFrames,stitchStage})=>{const bucket=Math.floor(renderedFrames/150);if(bucket!==last){last=bucket;console.log('frames',renderedFrames,'/',comp.durationInFrames,'encoded',encodedFrames,stitchStage)}}});
+console.log('DONE',output);})().catch(e=>{console.error(e);process.exit(1)});

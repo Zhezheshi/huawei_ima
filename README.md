@@ -2,6 +2,12 @@
 
 基于 Node.js CommonJS 与 DeepSeek Flash 的营销工作台，支持本地授权资料和公开模拟 Demo。当前版本 **0.4.0**，已完成营销约束回归及 Cookie 登录部署修复。测试结果和部署边界见 [2026-10-23 更新报告](docs/acceptance-2026-10-23.md)；历史真实模型回归另见 [2026-10-18 报告](docs/acceptance-2026-10-18.md)。
 
+## 90秒宣传片与完整工程
+
+[观看/下载宣传片](video/exports/映销-90秒-宣传片.mp4) · [无配乐版](video/exports/映销-90秒-无配乐版.mp4) · [封面](video/exports/映销-宣传片封面.jpg)
+
+配套资料均已随仓库提供：[Remotion工程](video/README.md)、[完整旁白原文](video/docs/narration.md)、[旁白与时间轴](docs/voiceover_timeline.md)、[SRT字幕](video/exports/映销-90秒-中文字幕.srt)、[独立旁白/BGM/SFX](video/public/audio/)。完整位置对照见[视频交接索引](docs/video-handoff.md)。这是此前完成的原版宣传片，现有音频保持不变；画面为已标注的历史实测，不能当作当前云端生成录像。
+
 ## 当前功能
 
 需求解析与必要追问 → 客户洞察与营销策略 → 策略驱动取证与补查 → 图文创作 → 独立 LLM 审核及规则检查 → 最多两次修订 → 当前会话修改与导出。

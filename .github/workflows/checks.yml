@@ -19,6 +19,8 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test
       - run: npm run test:http
+      - name: Verify published video, narration and subtitles
+        run: node video/scripts/verify.cjs
   container:
     runs-on: ubuntu-latest
     steps:

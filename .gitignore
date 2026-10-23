@@ -35,3 +35,7 @@ dist/
 # Reviewed source/Demo deployment archive only; all other ZIPs stay private.
 !/releases/huawei-pc-agent-20261018.zip
 !/releases/huawei-pc-agent-20261023.zip
+
+# Reviewed existing promo exports; do not include other local video artifacts.
+!/video/exports/映销-90秒-宣传片.mp4
+!/video/exports/映销-90秒-无配乐版.mp4

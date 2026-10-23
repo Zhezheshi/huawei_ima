@@ -1,0 +1,233 @@
+[
+  {
+    "shot": "brand",
+    "from": 10,
+    "duration": 69,
+    "text": "映销，让华为电脑营销，",
+    "src": "audio/brand-0.wav"
+  },
+  {
+    "shot": "brand",
+    "from": 83,
+    "duration": 57,
+    "text": "从一条需求开始。",
+    "src": "audio/brand-1.wav"
+  },
+  {
+    "shot": "problem",
+    "from": 190,
+    "duration": 78,
+    "text": "查参数、找配图、改文案，",
+    "src": "audio/problem-0.wav"
+  },
+  {
+    "shot": "problem",
+    "from": 272,
+    "duration": 77,
+    "text": "一次创作，总在反复重来？",
+    "src": "audio/problem-1.wav"
+  },
+  {
+    "shot": "brief",
+    "from": 370,
+    "duration": 101,
+    "text": "现在，把产品、人群、平台和目标，",
+    "src": "audio/brief-0.wav"
+  },
+  {
+    "shot": "brief",
+    "from": 475,
+    "duration": 37,
+    "text": "一次说清。",
+    "src": "audio/brief-1.wav"
+  },
+  {
+    "shot": "brief",
+    "from": 516,
+    "duration": 72,
+    "text": "映销接住你的创作需求。",
+    "src": "audio/brief-2.wav"
+  },
+  {
+    "shot": "strategy",
+    "from": 610,
+    "duration": 67,
+    "text": "先理解客户，再组织卖点。",
+    "src": "audio/strategy-0.wav"
+  },
+  {
+    "shot": "strategy",
+    "from": 681,
+    "duration": 67,
+    "text": "从人群痛点到行动引导，",
+    "src": "audio/strategy-1.wav"
+  },
+  {
+    "shot": "strategy",
+    "from": 752,
+    "duration": 76,
+    "text": "为这一篇内容，规划营销策略。",
+    "src": "audio/strategy-2.wav"
+  },
+  {
+    "shot": "evidence",
+    "from": 850,
+    "duration": 86,
+    "text": "从本地知识库检索产品事实，",
+    "src": "audio/evidence-0.wav"
+  },
+  {
+    "shot": "evidence",
+    "from": 940,
+    "duration": 73,
+    "text": "把参数、适用条件和来源，",
+    "src": "audio/evidence-1.wav"
+  },
+  {
+    "shot": "evidence",
+    "from": 1017,
+    "duration": 51,
+    "text": "一起放进证据链。",
+    "src": "audio/evidence-2.wav"
+  },
+  {
+    "shot": "compose",
+    "from": 1090,
+    "duration": 70,
+    "text": "依据策略和证据创作图文，",
+    "src": "audio/compose-0.wav"
+  },
+  {
+    "shot": "compose",
+    "from": 1164,
+    "duration": 50,
+    "text": "选取同型号配图，",
+    "src": "audio/compose-1.wav"
+  },
+  {
+    "shot": "compose",
+    "from": 1218,
+    "duration": 90,
+    "text": "让产品价值，走进具体的使用场景。",
+    "src": "audio/compose-2.wav"
+  },
+  {
+    "shot": "formats",
+    "from": 1330,
+    "duration": 85,
+    "text": "小红书、公众号、朋友圈、门店海报，",
+    "src": "audio/formats-0.wav"
+  },
+  {
+    "shot": "formats",
+    "from": 1419,
+    "duration": 82,
+    "text": "按平台调整结构、字数和配图，",
+    "src": "audio/formats-1.wav"
+  },
+  {
+    "shot": "formats",
+    "from": 1505,
+    "duration": 44,
+    "text": "让内容各得其所。",
+    "src": "audio/formats-2.wav"
+  },
+  {
+    "shot": "audit",
+    "from": 1570,
+    "duration": 82,
+    "text": "生成之后，独立审核与规则再把关。",
+    "src": "audio/audit-0.wav"
+  },
+  {
+    "shot": "audit",
+    "from": 1656,
+    "duration": 81,
+    "text": "价格、兼容和体验，不能凭空承诺。",
+    "src": "audio/audit-1.wav"
+  },
+  {
+    "shot": "audit",
+    "from": 1741,
+    "duration": 47,
+    "text": "有问题，继续修订。",
+    "src": "audio/audit-2.wav"
+  },
+  {
+    "shot": "edit",
+    "from": 1810,
+    "duration": 68,
+    "text": "想更口语，或只改一个标题？",
+    "src": "audio/edit-0.wav"
+  },
+  {
+    "shot": "edit",
+    "from": 1882,
+    "duration": 54,
+    "text": "直接提出修改要求。",
+    "src": "audio/edit-1.wav"
+  },
+  {
+    "shot": "edit",
+    "from": 1940,
+    "duration": 88,
+    "text": "图片也能增删，保留你认可的正文。",
+    "src": "audio/edit-2.wav"
+  },
+  {
+    "shot": "export",
+    "from": 2050,
+    "duration": 57,
+    "text": "审核通过后，复制文案，",
+    "src": "audio/export-0.wav"
+  },
+  {
+    "shot": "export",
+    "from": 2111,
+    "duration": 69,
+    "text": "或导出带图片的文档和网页。",
+    "src": "audio/export-1.wav"
+  },
+  {
+    "shot": "export",
+    "from": 2184,
+    "duration": 85,
+    "text": "从创作到交付，留在同一个工作台。",
+    "src": "audio/export-2.wav"
+  },
+  {
+    "shot": "coverage",
+    "from": 2290,
+    "duration": 82,
+    "text": "覆盖八类营销场景，适配四个平台。",
+    "src": "audio/coverage-0.wav"
+  },
+  {
+    "shot": "coverage",
+    "from": 2376,
+    "duration": 42,
+    "text": "把日常创作需求，",
+    "src": "audio/coverage-1.wav"
+  },
+  {
+    "shot": "coverage",
+    "from": 2422,
+    "duration": 55,
+    "text": "接成一条完整的工作流。",
+    "src": "audio/coverage-2.wav"
+  },
+  {
+    "shot": "outro",
+    "from": 2500,
+    "duration": 81,
+    "text": "映销，华为电脑营销智能体。",
+    "src": "audio/outro-0.wav"
+  },
+  {
+    "shot": "outro",
+    "from": 2585,
+    "duration": 76,
+    "text": "让每一句卖点，有据可查。",
+    "src": "audio/outro-1.wav"
+  }
+]

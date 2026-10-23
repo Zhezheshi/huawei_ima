@@ -1,0 +1,92 @@
+{
+  "engine": "Kokoro ONNX v1.1-zh fp16",
+  "voice": "zf_001",
+  "baseSpeed": 1.03,
+  "method": "local neural synthesis; actual per-line audio lengths determine captions",
+  "records": [
+    {
+      "id": "brand",
+      "rawSeconds": 4.168,
+      "tempo": 1,
+      "lastFrame": 140,
+      "shotEnd": 180
+    },
+    {
+      "id": "problem",
+      "rawSeconds": 5.122,
+      "tempo": 1.0005,
+      "lastFrame": 349,
+      "shotEnd": 360
+    },
+    {
+      "id": "brief",
+      "rawSeconds": 7.007,
+      "tempo": 1.0024,
+      "lastFrame": 588,
+      "shotEnd": 600
+    },
+    {
+      "id": "strategy",
+      "rawSeconds": 8.104,
+      "tempo": 1.1594,
+      "lastFrame": 828,
+      "shotEnd": 840
+    },
+    {
+      "id": "evidence",
+      "rawSeconds": 7.326,
+      "tempo": 1.048,
+      "lastFrame": 1068,
+      "shotEnd": 1080
+    },
+    {
+      "id": "compose",
+      "rawSeconds": 8.245,
+      "tempo": 1.1796,
+      "lastFrame": 1308,
+      "shotEnd": 1320
+    },
+    {
+      "id": "formats",
+      "rawSeconds": 8.416,
+      "tempo": 1.2039,
+      "lastFrame": 1549,
+      "shotEnd": 1560
+    },
+    {
+      "id": "audit",
+      "rawSeconds": 8.635,
+      "tempo": 1.2354,
+      "lastFrame": 1788,
+      "shotEnd": 1800
+    },
+    {
+      "id": "edit",
+      "rawSeconds": 8.015,
+      "tempo": 1.1467,
+      "lastFrame": 2028,
+      "shotEnd": 2040
+    },
+    {
+      "id": "export",
+      "rawSeconds": 8.683,
+      "tempo": 1.2422,
+      "lastFrame": 2269,
+      "shotEnd": 2280
+    },
+    {
+      "id": "coverage",
+      "rawSeconds": 7.786,
+      "tempo": 1.2998,
+      "lastFrame": 2477,
+      "shotEnd": 2490
+    },
+    {
+      "id": "outro",
+      "rawSeconds": 5.21,
+      "tempo": 1,
+      "lastFrame": 2661,
+      "shotEnd": 2700
+    }
+  ]
+}
